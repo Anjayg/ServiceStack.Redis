@@ -15,6 +15,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using ServiceStack.Text;
 
 namespace ServiceStack.Redis
@@ -29,14 +30,15 @@ namespace ServiceStack.Redis
 			};
 			try
 			{
-				socket.Connect(Host, Port);
+                socket = GetSocketCanConnect();
+                if (!socket.Connected)
+                {
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                    socket = null;
+                    return;
+                }
 
-				if (!socket.Connected)
-				{
-					socket.Close();
-					socket = null;
-					return;
-				}
 				Bstream = new BufferedStream(new NetworkStream(socket), 16 * 1024);
 
 				if (Password != null)
@@ -69,6 +71,25 @@ namespace ServiceStack.Redis
 				throw throwEx;
 			}
 		}
+
+        private readonly ManualResetEvent TimeoutObject = new ManualResetEvent(false);
+        private Socket GetSocketCanConnect()
+        {
+            TimeoutObject.Reset();
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            {
+                SendTimeout = SendTimeout
+            };
+            socket.BeginConnect(Host, Port, new AsyncCallback(CallBackMethod), socket);
+            TimeoutObject.WaitOne(SendTimeout, false);
+            return socket;
+        }
+
+        private void CallBackMethod(IAsyncResult ar)
+        {
+            TimeoutObject.Set();
+        }
+
 
 		protected string ReadLine()
 		{
