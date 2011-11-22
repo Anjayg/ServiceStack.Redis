@@ -101,7 +101,7 @@ namespace ServiceStack.Redis.Generic
                     queuedCommand.ProcessResult();
                 }
             }
-            catch (RedisTransactionFailedException e)
+            catch (RedisTransactionFailedException)
             {
                 rc = false;
             }
@@ -135,7 +135,7 @@ namespace ServiceStack.Redis.Generic
             RedisClient.ClearTypeIdsRegisteredDuringPipeline();
         }
 
-        public bool Replay()
+        public new bool Replay()
         {
             bool rc = true;
             try
@@ -163,7 +163,7 @@ namespace ServiceStack.Redis.Generic
             return rc;
         }
 
-        public void Dispose()
+        public new void Dispose()
         {
             base.Dispose();
             if (RedisClient.Transaction == null) return;
