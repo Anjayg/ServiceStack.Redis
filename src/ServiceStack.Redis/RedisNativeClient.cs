@@ -55,7 +55,8 @@ namespace ServiceStack.Redis
         /// <summary>
         /// Used to manage connection pooling
         /// </summary>
-        internal bool Active { get; set; }
+        public bool Active { get; internal set; }
+        internal DateTime InactiveTime { get; set; }
         internal PooledRedisClientManager ClientManager { get; set; }
 
         internal int IdleTimeOutSecs = 240; //default on redis is 300
@@ -990,12 +991,14 @@ namespace ServiceStack.Redis
 
         public byte[][] ZRevRangeByScore(string setId, double min, double max, int? skip, int? take)
         {
-            return GetRangeByScore(Commands.ZRevRangeByScore, setId, min, max, skip, take, false);
+			//Note: http://redis.io/commands/zrevrangebyscore has max, min in the wrong other
+			return GetRangeByScore(Commands.ZRevRangeByScore, setId, max, min, skip, take, false);
         }
 
         public byte[][] ZRevRangeByScoreWithScores(string setId, double min, double max, int? skip, int? take)
         {
-            return GetRangeByScore(Commands.ZRevRangeByScore, setId, min, max, skip, take, true);
+			//Note: http://redis.io/commands/zrevrangebyscore has max, min in the wrong other
+			return GetRangeByScore(Commands.ZRevRangeByScore, setId, max, min, skip, take, true);
         }
 
         public int ZRemRangeByRank(string setId, int min, int max)
@@ -1209,7 +1212,7 @@ namespace ServiceStack.Redis
 
         #endregion
 
-        internal bool IsDisposed { get; set; }
+        public bool IsDisposed { get; internal set; }
 
         public void Dispose()
         {
