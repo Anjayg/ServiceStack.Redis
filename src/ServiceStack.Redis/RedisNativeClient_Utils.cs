@@ -114,7 +114,7 @@ namespace ServiceStack.Redis
 				var now = Stopwatch.GetTimestamp();
 				var elapsedSecs = (now - LastConnectedAtTimestamp) / Stopwatch.Frequency;
 
-				if (elapsedSecs > IdleTimeOutSecs && !socket.IsConnected())
+                if (elapsedSecs > IdleTimeOutSecs && (socket == null || socket.IsConnected() == false))
 				{
 					return Reconnect();
 				}
